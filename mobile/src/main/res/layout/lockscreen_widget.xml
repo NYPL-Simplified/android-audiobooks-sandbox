@@ -1,0 +1,51 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                xmlns:app="http://schemas.android.com/apk/res-auto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="#09C"
+                android:padding="@dimen/widget_margin"
+                android:resizeMode="horizontal|vertical">
+
+    <TextView
+        android:id="@+id/appwidget_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="8dp"
+        android:background="#09C"
+        android:contentDescription="@string/appwidget_text"
+        android:text="@string/appwidget_text"
+        android:textColor="#ffffff"
+        android:textSize="24sp"
+        android:textStyle="bold|italic"/>
+
+    <Button
+        android:id="@+id/button2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/appwidget_text"
+        android:layout_marginBottom="28dp"
+        android:layout_toStartOf="@+id/appwidget_text"
+        android:text="Button"/>
+
+    <ToggleButton
+        android:id="@+id/toggleButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/appwidget_text"
+        android:layout_alignTop="@+id/button2"
+        android:layout_marginStart="47dp"
+        android:text="ToggleButton For LockScreen Widget"/>
+
+    <ImageButton
+        android:id="@+id/imageButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignStart="@+id/button2"
+        android:layout_below="@+id/appwidget_text"
+        android:layout_marginStart="14dp"
+        android:layout_marginTop="63dp"
+        app:srcCompat="@drawable/quantum_ic_replay_30_grey600_36"/>
+
+</RelativeLayout>
