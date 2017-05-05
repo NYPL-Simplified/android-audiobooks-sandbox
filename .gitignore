@@ -4,3 +4,6 @@
 .DS_Store
 /build
 *.iml
+.google
+*~
+mobile/src/main/res/assets
