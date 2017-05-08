@@ -17,7 +17,9 @@ package com.example.android.uamp.ui;
 
 import android.app.ActivityOptions;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.AssetManager;
 import android.content.res.Configuration;
 import android.os.Bundle;
 import android.os.Handler;
@@ -28,17 +30,24 @@ import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.MediaRouteButton;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.example.android.uamp.R;
+import com.example.android.uamp.model.ManifestModel;
+import com.example.android.uamp.model.ManifestReader;
 import com.example.android.uamp.utils.LogHelper;
 import com.google.android.gms.cast.framework.CastButtonFactory;
 import com.google.android.gms.cast.framework.CastContext;
 import com.google.android.gms.cast.framework.CastState;
 import com.google.android.gms.cast.framework.CastStateListener;
 import com.google.android.gms.cast.framework.IntroductoryOverlay;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 
 /**
  * Abstract activity with toolbar, navigation drawer and cast support. Needs to be extended by
@@ -280,9 +289,56 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
         // from web:
         //navigationView.getMenu().clear(); //clear old inflated items.
         //navigationView.inflateMenu(R.menu.new_navigation_drawer_items); //inflate new items.
-        navigationView.getMenu().add("Chapter 1");
-        navigationView.getMenu().add("Chapter 2");
 
+        // read the manifest file for list of chapter titles
+        // TODO: the logic for where the assets are stored should be moved out of here,
+        // and eventually hooked up to the SimplyE app.
+        Context appContext = getApplicationContext();
+        File assetDirectory = appContext.getFilesDir();
+        Log.d(TAG, "assetDirectory=" + assetDirectory.getAbsolutePath()); // data/data/appname/stuff
+
+        File testAssetDirectory = new File("file:///android_asset", "21_gun_salute");
+        Log.d(TAG, "testAssetDirectory=" + testAssetDirectory.getAbsolutePath());
+
+        AssetManager assetManager = appContext.getAssets();
+        InputStream manifestFileStream = null;
+        try {
+            manifestFileStream = assetManager.open("21_gun_salute/audiobook_manifest.json");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        /**
+         *
+         * Returns the absolute path on the filesystem where a file created with
+         * {@link #openFileOutput} is stored.
+        public abstract File getFileStreamPath(String name);
+
+         * Returns the absolute path to the directory on the filesystem where files
+         * created with {@link #openFileOutput} are stored.
+         public abstract File getFilesDir();
+         *
+         FileOutputStream fOut = context.openFileOutput(filename, appContext.MODE_PRIVATE); // if internal
+
+         * Return a String array of all the assets at the given path.
+         *
+         * @param path A relative path within the assets, i.e., "docs/home.html".
+         *
+         * @return String[] Array of strings, one for each asset.  These file
+         *         names are relative to 'path'.  You can open the file by
+         *         concatenating 'path' and a name in the returned string (via
+         *         File) and passing that to open().
+         public native final String[] list(String path)
+
+         */
+
+        ManifestReader manifestReader = new ManifestReader();
+        String fileContents = manifestReader.readManifest(manifestFileStream);
+        ManifestModel manifestModel = manifestReader.parseManifest(fileContents);
+
+        for (ManifestModel.Spine spineElement : manifestModel.getSpine()) {
+            navigationView.getMenu().add(manifestModel.sanitizeString(spineElement.getTitle()));
+        }
 
         //if (MusicPlayerActivity.class.isAssignableFrom(getClass())) {
         navigationView.setCheckedItem(R.id.navigation_back_to_catalog);

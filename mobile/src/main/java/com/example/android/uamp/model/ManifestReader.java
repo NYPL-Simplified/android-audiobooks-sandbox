@@ -14,6 +14,7 @@ import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -60,8 +61,7 @@ public class ManifestReader {
 	}
 
 
-	public String readManifest(File assetDirectory) {
-
+	public String readManifest(File manifestFile) {
 		/*
 		if (isExternalStorageAvailable() && !isExternalStorageReadOnly()) {
 			myFileHandle = new File(getExternalFilesDir(filepath), filename);
@@ -78,26 +78,19 @@ public class ManifestReader {
 			FileInputStream fin = openFileInput(filename);  // if internal
 		*/
 
+		if (manifestFile == null || !manifestFile.canRead()) {
+			// TODO: is this what should happen, or better to throw an exception?
+			return null;
+		}
+		logd(String.format("Found and can read manifest file: %s", manifestFile));
+
 		BufferedReader br = null;
-		StringBuilder manifestBody = new StringBuilder();
+		String manifestBody = null;
 		try {
-			File manifestFile = new File(assetDirectory, "audiobook_manifest.json");
-			if (!manifestFile.canRead()) {
-				return null;
-			}
-			logd(String.format("Found and can read manifest file: %s", manifestFile.getCanonicalPath()));
-
 			br = new BufferedReader(new FileReader(manifestFile));
-			String line;
-			while ((line = br.readLine()) != null) {
-				manifestBody.append(line);
-			}
-
+			manifestBody = readManifest(br);
 		} catch (FileNotFoundException e) {
-			// TODO clean up
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO clean up
+			// TODO
 			e.printStackTrace();
 		} catch (Exception e) {
 			// TODO clean up
@@ -112,9 +105,51 @@ public class ManifestReader {
 			}
 		}
 
-		return manifestBody.toString();
+		return manifestBody;
 	}
 
+
+	public String readManifest(InputStream manifestFile) {
+		if (manifestFile == null) {
+			// TODO: is this what should happen, or better to throw an exception?
+			return null;
+		}
+
+		BufferedReader br = null;
+		String manifestBody = null;
+		try {
+			br = new BufferedReader(new InputStreamReader(manifestFile));
+			manifestBody = readManifest(br);
+		} catch (Exception e) {
+			// TODO clean up
+			e.printStackTrace();
+		} finally {
+			if (br != null) {
+				try {
+					br.close();
+				} catch (IOException e) {
+					// ignore
+				}
+			}
+		}
+
+		return manifestBody;
+	}
+
+
+	public String readManifest(BufferedReader reader) {
+		StringBuilder manifestBody = new StringBuilder();
+		String line;
+		try {
+			while ((line = reader.readLine()) != null) {
+				manifestBody.append(line);
+			}
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+
+		return manifestBody.toString();
+	}
 
 
 	public ManifestModel parseManifest(String manifestBody) {

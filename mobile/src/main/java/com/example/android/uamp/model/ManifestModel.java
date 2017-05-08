@@ -71,7 +71,16 @@ public class ManifestModel {
 	}
 
 
+	// --------------------------- UTILITY METHODS ---------------------------
+	public String sanitizeString(String dirtyData) {
+		if (dirtyData == null) {
+			return "";
+		}
+		return dirtyData;
+	}
 
+
+	// --------------------------- INNER CLASSES ---------------------------
 	public class Author {
 		@SerializedName("name")
 		@Expose

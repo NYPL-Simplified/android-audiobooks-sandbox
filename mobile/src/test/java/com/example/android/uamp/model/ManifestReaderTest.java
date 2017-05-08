@@ -114,7 +114,8 @@ public class ManifestReaderTest {
 
 	@Test
 	public void readManifest() throws Exception {
-		String fileContents = manifestReader.readManifest(testAssetDirectory);
+		File manifestFile = new File(testAssetDirectory, "audiobook_manifest.json");
+		String fileContents = manifestReader.readManifest(manifestFile);
 		assertTrue(fileContents.contains("metadata\": {"));
 	}
 
@@ -122,7 +123,8 @@ public class ManifestReaderTest {
 	@Test
 	public void parseManifest() throws Exception {
 		// cheating a bit here, using another method to read the sample manifest from file
-		String fileContents = manifestReader.readManifest(testAssetDirectory);
+		File manifestFile = new File(testAssetDirectory, "audiobook_manifest.json");
+		String fileContents = manifestReader.readManifest(manifestFile);
 		ManifestModel manifest = manifestReader.parseManifest(fileContents);
 		assertEquals(manifest.getMetadata().getTitle(), "21 Gun Salute");
 	}

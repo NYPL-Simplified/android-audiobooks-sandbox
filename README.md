@@ -1,9 +1,10 @@
-Universal Android Music Player Sample
+Audiobook Sandbox
 =====================================
 
-This sample shows how to implement an audio media app that works
-across multiple form factors and provide a consistent user experience
-on Android phones, tablets, Android Auto, Android Wear, Android TV and Google Cast devices.
+This is the repository for our proof-of-concept code to display, play, and manipulate audiobooks in SimplyE.
+The project is not ready for outside contributions, but we're always happy to hear suggestions.
+
+The project utilizes Google's Universal Music Player sample project.
 
 
 Pre-requisites
@@ -11,11 +12,12 @@ Pre-requisites
 
 - Android SDK v17
 
-Getting Started
----------------
 
-This sample uses the Gradle build system. To build this project, use the
-"gradlew build" command or use "Import Project" in Android Studio.
+Interesting Code Locations
+--------------------------
+
+- The Table Of Contents nav bar is coded for in com.example.android.uamp.ui.ActionBarCastActivity.populateDrawerItems(). 
+
 
 Screenshots
 -----------
@@ -30,20 +32,17 @@ Screenshots
 ![Android Wear watch face](screenshots/android_wear_1.png "MediaStyle notifications on an Android Wear watch")
 ![Android Wear controls](screenshots/android_wear_2.png "Media playback controls on an Android Wear watch")
 
-Support
--------
+
+General Outside Support
+-----------------------
 
 - Google+ Community: https://plus.google.com/communities/105153134372062985968
 - Stack Overflow: http://stackoverflow.com/questions/tagged/android
+- https://github.com/googlesamples/android-UniversalMusicPlayer/issues
 
-If you've found an error in this sample, please file an issue:
-https://github.com/googlesamples/android-UniversalMusicPlayer/issues
 
-Patches are encouraged, and may be submitted by forking this project and
-submitting a pull request through GitHub. Please see CONTRIBUTING.md for more details.
-
-License
--------
+License For The Google Sample Code We're Using
+----------------------------------------------
 
 Copyright 2014 The Android Open Source Project, Inc.
 

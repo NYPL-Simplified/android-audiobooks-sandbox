@@ -1,0 +1,109 @@
+{
+"metadata": {
+    "@type": "http://bib.schema.org/Audiobook",
+    "identifier": "http://iconnct.oneclickdigital.com/#titles/9781433229633",
+    "title": "21 Gun Salute",
+    "author": [{
+        "name": {
+            "ru": "Патрик О’Брайан",
+            "en": "Patrick O'Brian"
+        },        
+        "sort_as": "O'Brian, Patrick"
+    }],
+    "narrator": [
+        {
+            "name": "Simon Vance",
+            "image": "http://simonvance.com/wp-content/uploads/SV2014-1-e1424657224684.jpg"
+        }
+    ],
+    
+    "language": "en-US",
+    "description": "Then Madeline discovers mysterious circumstances linking her favorite cousin to a twenty-year-old murder case, and suddenly her roots are a serious matter again-deadly...",
+    "subject": ["General Fiction"],
+    
+    "schema:typicalAgeRange": "7-117",
+    "publisher": "Blackstone Audio, Inc.",
+    "published": "2011-08-24",
+    
+    "modified": "2016-08-11T19:32:18Z",
+        
+    "duration": 7153,
+    "type": "audio/mpeg",
+    "bitrate": 48,
+    "samplerate": "32",
+    "channels": 1,
+    
+    "schema:hasPart": [
+        {
+            "@type": "http://schema.org/VisualArtwork",
+            "schema:url": "http://images.oneclickdigital.com/1752599/1752599_image_148x230.jpg",
+            "schema:license": "https://creativecommons.org/publicdomain/zero/1.0/"
+        }
+    ],
+    
+    "schema:license": "https://creativecommons.org/publicdomain/zero/1.0/",
+    
+    "schema:isBasedOn": {
+        "@type": "https://schema.org/Book",
+        "title": "21 The Final Unfinished Voyage Of Jack Aubrey",
+        "schema:license": "https://creativecommons.org/publicdomain/zero/1.0/",
+        "schema:url": "http://www.goodreads.com/book/show/24524.The_Final_Unfinished_Voyage_of_Jack_Aubrey"
+    }    
+},
+
+"links": [
+    {"rel": "self", "href": "audiobook-manifest.json", "type": "application/audiobook+json"},
+        
+    {"rel": "cover", "href": "1752599_image_32x50.jpg", "type": "image/jpeg", "height": 32, "width": 50},
+    {"rel": "cover", "href": "1752599_image_148x230.jpg", "type": "image/jpeg", "height": 148, "width": 230},
+    {"rel": "cover", "href": "http://images.oneclickdigital.com/1752599/1752599_image_512x512_iTunes.png", "type": "image/jpeg", "height": 512, "width": 512}
+],
+
+"spine": [
+    {
+        "href": "1752599_001_C001.mp3", 
+        "type": "audio/mpeg", 
+        "bitrate": 48, 
+        "samplerate": "32",
+        "channels": 1,
+        "duration": 2703, 
+        "title": "Chapter 1",
+        "properties": {
+        }
+    },
+    {
+        "href": "1752599_001_C002.mp3", 
+        "type": "audio/mpeg", 
+        "bitrate": 48, 
+        "samplerate": "32",
+        "channels": 1,
+        "duration": 1705, 
+        "title": "Chapter 2", 
+        "properties": {
+        }
+    }, 
+    {
+        "href": "1752599_001_C003.mp3", "type": "audio/mpeg",
+        "bitrate": 48, 
+        "samplerate": "32",
+        "channels": 1,
+        "duration": 1961, 
+        "title": "Chapter 3"
+    }, 
+    {
+        "href": "1752599_001_C004.mp3", "type": "audio/mpeg", 
+        "bitrate": 48, 
+        "samplerate": "32",
+        "channels": 1,
+        "duration": 779, 
+        "title": "Chapter 4"
+    }
+],
+
+"timeline": [
+    {"href": "1752599_001_C001.mp3#t=0,2703", "title": "Chapter 1"},
+    {"href": "1752599_001_C002.mp3#t=0,1705", "title": "Chapter 2"},
+    {"href": "1752599_001_C003.mp3#t=0,1961", "title": "Chapter 3"},
+    {"href": "1752599_001_C004.mp3#t=0,779", "title": "Chapter 4"}
+]
+}
