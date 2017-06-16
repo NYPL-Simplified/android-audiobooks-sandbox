@@ -40,6 +40,8 @@ public class MediaIDHelper {
     private static final char LEAF_SEPARATOR = '|';
 
     /**
+     * TODO:  Our media id will be based on chapter id from the manifest, and we'll need to write methods to get filename from there.
+     *
      * Create a String value that represents a playable or a browsable media.
      *
      * Encode the media browseable categories, if any, and the unique music ID, if any,
@@ -74,6 +76,8 @@ public class MediaIDHelper {
         return sb.toString();
     }
 
+
+    // TODO:  Delete method
     private static boolean isValidCategory(String category) {
         return category == null ||
                 (
@@ -82,7 +86,11 @@ public class MediaIDHelper {
                 );
     }
 
+
     /**
+     * TODO:  Change to extract filepath to mp3 file.
+     *
+     *
      * Extracts unique musicID from the mediaID. mediaID is, by this sample's convention, a
      * concatenation of category (eg "by_genre"), categoryValue (eg "Classical") and unique
      * musicID. This is necessary so we know where the user selected the music from, when the music
@@ -100,6 +108,7 @@ public class MediaIDHelper {
     }
 
     /**
+     * TODO: DELETE method
      * Extracts category and categoryValue from the mediaID. mediaID is, by this sample's
      * convention, a concatenation of category (eg "by_genre"), categoryValue (eg "Classical") and
      * mediaID. This is necessary so we know where the user selected the music from, when the music
@@ -115,6 +124,7 @@ public class MediaIDHelper {
         return mediaID.split(String.valueOf(CATEGORY_SEPARATOR));
     }
 
+    // TODO: delete method
     public static String extractBrowseCategoryValueFromMediaID(@NonNull String mediaID) {
         String[] hierarchy = getHierarchy(mediaID);
         if (hierarchy.length == 2) {
@@ -123,10 +133,13 @@ public class MediaIDHelper {
         return null;
     }
 
+    // TODO: delete method or reformat to check if the mp3 file can be found
     public static boolean isBrowseable(@NonNull String mediaID) {
         return mediaID.indexOf(LEAF_SEPARATOR) < 0;
     }
 
+
+    // TODO: delete method
     public static String getParentMediaID(@NonNull String mediaID) {
         String[] hierarchy = getHierarchy(mediaID);
         if (!isBrowseable(mediaID)) {
@@ -139,7 +152,10 @@ public class MediaIDHelper {
         return createMediaID(null, parentHierarchy);
     }
 
+
     /**
+     * TODO: make sure still works after I change ids and media playback methods
+     *
      * Determine if media item is playing (matches the currently playing media item).
      *
      * @param context for retrieving the {@link MediaControllerCompat}

@@ -52,8 +52,16 @@ public class PlaybackControlsFragment extends Fragment {
     private TextView mExtraInfo;
     private ImageView mAlbumArt;
     private String mArtUrl;
-    // Receive callbacks from the MediaController. Here we update our state such as which queue
-    // is being shown, the current title and description and the PlaybackState.
+
+
+    /**
+     * TODO: make sure all my new buttons change appropriately when state changes,
+     * TODO: make sure all my new metadata (title, etc.) fields get updated on metadata change (chapter/book switch).
+     *
+     * The UI should display the current state of the media session, as described by its PlaybackState and Metadata. When you create the transport controls, you can grab the current state of the session, display it in your UI, and enable and disable transport controls based on the state and its available actions.
+     * Receive callbacks from the MediaController. Here we update our state such as which queue
+     * is being shown, the current title and description and the PlaybackState.
+     */
     private final MediaControllerCompat.Callback mCallback = new MediaControllerCompat.Callback() {
         @Override
         public void onPlaybackStateChanged(@NonNull PlaybackStateCompat state) {
@@ -73,11 +81,16 @@ public class PlaybackControlsFragment extends Fragment {
         }
     };
 
+
+    /**
+     * TODO: doc
+     */
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View rootView = inflater.inflate(R.layout.fragment_playback_controls, container, false);
 
+        // Grab the view for the play/pause button
         mPlayPause = (ImageButton) rootView.findViewById(R.id.play_pause);
         mPlayPause.setEnabled(true);
         mPlayPause.setOnClickListener(mButtonListener);
@@ -85,6 +98,7 @@ public class PlaybackControlsFragment extends Fragment {
         mTitle = (TextView) rootView.findViewById(R.id.title);
         mSubtitle = (TextView) rootView.findViewById(R.id.artist);
         mExtraInfo = (TextView) rootView.findViewById(R.id.extra_info);
+        // TODO:  cover image goes here!
         mAlbumArt = (ImageView) rootView.findViewById(R.id.album_art);
         rootView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -104,6 +118,10 @@ public class PlaybackControlsFragment extends Fragment {
         return rootView;
     }
 
+
+    /**
+     * TODO: doc
+     */
     @Override
     public void onStart() {
         super.onStart();
@@ -111,10 +129,15 @@ public class PlaybackControlsFragment extends Fragment {
         MediaControllerCompat controller = ((FragmentActivity) getActivity())
                 .getSupportMediaController();
         if (controller != null) {
+            // register media button callbacks
             onConnected();
         }
     }
 
+
+    /**
+     * TODO: doc
+     */
     @Override
     public void onStop() {
         super.onStop();
@@ -122,10 +145,15 @@ public class PlaybackControlsFragment extends Fragment {
         MediaControllerCompat controller = ((FragmentActivity) getActivity())
                 .getSupportMediaController();
         if (controller != null) {
+            // stop updating button colors and title/image displays when no longer playing anything
             controller.unregisterCallback(mCallback);
         }
     }
 
+
+    /**
+     * TODO: doc
+     */
     public void onConnected() {
         MediaControllerCompat controller = ((FragmentActivity) getActivity())
                 .getSupportMediaController();
@@ -133,10 +161,16 @@ public class PlaybackControlsFragment extends Fragment {
         if (controller != null) {
             onMetadataChanged(controller.getMetadata());
             onPlaybackStateChanged(controller.getPlaybackState());
+
+            // start updating button colors and title/image displays when click play/pause or switch chapters
             controller.registerCallback(mCallback);
         }
     }
 
+
+    /**
+     * TODO: doc
+     */
     private void onMetadataChanged(MediaMetadataCompat metadata) {
         LogHelper.d(TAG, "onMetadataChanged ", metadata);
         if (getActivity() == null) {
@@ -181,6 +215,10 @@ public class PlaybackControlsFragment extends Fragment {
         }
     }
 
+
+    /**
+     * TODO: doc
+     */
     public void setExtraInfo(String extraInfo) {
         if (extraInfo == null) {
             mExtraInfo.setVisibility(View.GONE);
@@ -190,6 +228,10 @@ public class PlaybackControlsFragment extends Fragment {
         }
     }
 
+
+    /**
+     * TODO: doc
+     */
     private void onPlaybackStateChanged(PlaybackStateCompat state) {
         LogHelper.d(TAG, "onPlaybackStateChanged ", state);
         if (getActivity() == null) {
@@ -232,11 +274,16 @@ public class PlaybackControlsFragment extends Fragment {
         setExtraInfo(extraInfo);
     }
 
+
+    /**
+     * TODO:  might need to add more logic for listening to clicks on other than play/pause, s.a. FF, Rev, next chapter, etc..
+     * TODO:  where do I call this from, to play a chapter?
+     *
+     */
     private final View.OnClickListener mButtonListener = new View.OnClickListener() {
         @Override
         public void onClick(View v) {
-            MediaControllerCompat controller = ((FragmentActivity) getActivity())
-                    .getSupportMediaController();
+            MediaControllerCompat controller = ((FragmentActivity) getActivity()).getSupportMediaController();
             PlaybackStateCompat stateObj = controller.getPlaybackState();
             final int state = stateObj == null ?
                     PlaybackStateCompat.STATE_NONE : stateObj.getState();
@@ -258,18 +305,41 @@ public class PlaybackControlsFragment extends Fragment {
         }
     };
 
+
+    /**
+     * TODO: doc
+     */
     private void playMedia() {
         MediaControllerCompat controller = ((FragmentActivity) getActivity())
                 .getSupportMediaController();
         if (controller != null) {
+            // TODO: https://developer.android.com/guide/topics/media-apps/volume-and-earphones.html#audio-focus
+            // says to "request audio focus and verify that it has been granted"
+            // I see it in LocalPlayback.java.onAudioFocusChange and tryToGetAudioFocus.
+            // Verify that's correct and does the stuff below.
+
+            // I do not see requestAudioFocus() in code, but sample app does switch focus correctly when it and another app
+            // are in conflict.  Two audio streams are not played.
+            // "Before proceeding to play, call requestAudioFocus() and verify that it returned AUDIOFOCUS_REQUEST_GRANTED. The call to requestAudioFocus() should be made in the onPlay() callback of a media session if you design your app as we describe in this guide."
+            // When you request audio focus you must specify a duration hint, which may be honored by another app that is currently holding focus and playing:
+            // Request permanent audio focus (AUDIOFOCUS_GAIN) when you plan to play audio for the foreseeable future (for example, when playing music) and you expect the previous holder of audio focus to stop playing.
+
             controller.getTransportControls().play();
         }
     }
 
+
+    /**
+     * TODO: doc
+     */
     private void pauseMedia() {
         MediaControllerCompat controller = ((FragmentActivity) getActivity())
                 .getSupportMediaController();
         if (controller != null) {
+            // TODO: https://developer.android.com/guide/topics/media-apps/volume-and-earphones.html#audio-focus
+            // says to "When another app gains audio focus, stop playing or duck the volume down"
+            // I do not see requestAudioFocus() in code, but sample app does switch focus correctly when it and another app
+            // are in conflict.  Two audio streams are not played.
             controller.getTransportControls().pause();
         }
     }

@@ -26,6 +26,7 @@ import android.os.PowerManager;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.example.android.uamp.MusicService;
 import com.example.android.uamp.model.MusicProvider;
@@ -63,7 +64,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     private static final int AUDIO_FOCUSED  = 2;
 
     private final Context mContext;
-    private final WifiManager.WifiLock mWifiLock;
+    //darya private final WifiManager.WifiLock mWifiLock;
     private int mState;
     private boolean mPlayOnFocusGain;
     private Callback mCallback;
@@ -100,20 +101,24 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         this.mMusicProvider = musicProvider;
         this.mAudioManager = (AudioManager) context.getSystemService(Context.AUDIO_SERVICE);
         // Create the Wifi lock (this does not acquire the lock, this just creates it)
-        this.mWifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
-                .createWifiLock(WifiManager.WIFI_MODE_FULL, "uAmp_lock");
+        //darya this.mWifiLock = ((WifiManager) context.getSystemService(Context.WIFI_SERVICE))
+        //darya        .createWifiLock(WifiManager.WIFI_MODE_FULL, "uAmp_lock");
         this.mState = PlaybackStateCompat.STATE_NONE;
+
+        // TODO:  mMediaPlayer is not being set here.  where and why wait?
+        // TODO:  What's the NoisyReceiver for?
     }
 
     @Override
     public void start() {
+        // TODO: why no code?
     }
 
     @Override
     public void stop(boolean notifyListeners) {
-        mState = PlaybackStateCompat.STATE_STOPPED;
+        this.setState(PlaybackStateCompat.STATE_STOPPED);
         if (notifyListeners && mCallback != null) {
-            mCallback.onPlaybackStatusChanged(mState);
+            mCallback.onPlaybackStatusChanged(this.getState());
         }
         mCurrentPosition = getCurrentStreamPosition();
         // Give up Audio focus
@@ -135,6 +140,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
     @Override
     public boolean isConnected() {
+        // TODO:  really?
         return true;
     }
 
@@ -156,11 +162,19 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
     }
 
+
+    /**
+     * TODO:  play() but not start()?
+     * TODO:  Is QueueItem related to MenuItem?
+     *
+     * @param item to play
+     */
     @Override
     public void play(QueueItem item) {
         mPlayOnFocusGain = true;
         tryToGetAudioFocus();
         registerAudioNoisyReceiver();
+
         String mediaId = item.getDescription().getMediaId();
         boolean mediaHasChanged = !TextUtils.equals(mediaId, mCurrentMediaId);
         if (mediaHasChanged) {
@@ -168,25 +182,43 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             mCurrentMediaId = mediaId;
         }
 
-        if (mState == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mMediaPlayer != null) {
+        if (this.getState() == PlaybackStateCompat.STATE_PAUSED && !mediaHasChanged && mMediaPlayer != null) {
             configMediaPlayerState();
         } else {
-            mState = PlaybackStateCompat.STATE_STOPPED;
+            this.setState(PlaybackStateCompat.STATE_STOPPED);  // TODO:  probably because about to release?
             relaxResources(false); // release everything except MediaPlayer
             MediaMetadataCompat track = mMusicProvider.getMusic(
                     MediaIDHelper.extractMusicIDFromMediaID(item.getDescription().getMediaId()));
 
             //noinspection ResourceType
+            // TODO:  will need source later for what?  because might not need to filter url stuff from it now, or filter better for filenames
             String source = track.getString(MusicProviderSource.CUSTOM_METADATA_TRACK_SOURCE);
             if (source != null) {
+                Log.d(TAG, "play: source=" + source);
                 source = source.replaceAll(" ", "%20"); // Escape spaces for URLs
+            } else {
+                Log.d(TAG, "play: source is null");
             }
 
-            try {
+                try {
                 createMediaPlayerIfNeeded();
 
-                mState = PlaybackStateCompat.STATE_BUFFERING;
+                this.setState(PlaybackStateCompat.STATE_BUFFERING);  // TODO:  now we're starting again
 
+                // TODO:  deprecated.  use setAudioAttributes instead (https://developer.android.com/reference/android/media/AudioFocusRequest.Builder.html),
+                // TODO:  except that requires API level O (the letter), so 1.  weird and 2.  maybe wait.
+                // TODO:  use https://developer.android.com/reference/android/media/AudioAttributes.html#CONTENT_TYPE_SPEECH
+
+                // TODO:  to play mp3 while downloading, see https://stackoverflow.com/questions/41373243/playing-a-music-file-while-downloading-it for ExoPlayer.
+                /*
+                 from online, reading mp3s locally is still STREAM_MUSIC:
+                 String u = "/sdcard/Download/01 Ae Dil Hai Mushkil - Title Song (Arijit Singh) 320kbps.mp3";
+                 MediaPlayer mediaPlayer = new MediaPlayer();
+                 mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+                 mediaPlayer.setDataSource(getApplicationContext(), Uri.parse(u));
+                 mediaPlayer.prepare();
+                 mediaPlayer.start();
+                 */
                 mMediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
                 mMediaPlayer.setDataSource(source);
 
@@ -200,10 +232,10 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
                 // If we are streaming from the internet, we want to hold a
                 // Wifi lock, which prevents the Wifi radio from going to
                 // sleep while the song is playing.
-                mWifiLock.acquire();
+                //darya mWifiLock.acquire();
 
                 if (mCallback != null) {
-                    mCallback.onPlaybackStatusChanged(mState);
+                    mCallback.onPlaybackStatusChanged(this.getState());
                 }
 
             } catch (IOException ex) {
@@ -217,7 +249,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
     @Override
     public void pause() {
-        if (mState == PlaybackStateCompat.STATE_PLAYING) {
+        if (this.getState() == PlaybackStateCompat.STATE_PLAYING) {
             // Pause media player and cancel the 'foreground service' state.
             if (mMediaPlayer != null && mMediaPlayer.isPlaying()) {
                 mMediaPlayer.pause();
@@ -226,12 +258,13 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             // while paused, retain the MediaPlayer but give up audio focus
             relaxResources(false);
         }
-        mState = PlaybackStateCompat.STATE_PAUSED;
+        this.setState(PlaybackStateCompat.STATE_PAUSED);
         if (mCallback != null) {
-            mCallback.onPlaybackStatusChanged(mState);
+            mCallback.onPlaybackStatusChanged(this.getState());
         }
         unregisterAudioNoisyReceiver();
     }
+
 
     @Override
     public void seekTo(int position) {
@@ -242,12 +275,12 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             mCurrentPosition = position;
         } else {
             if (mMediaPlayer.isPlaying()) {
-                mState = PlaybackStateCompat.STATE_BUFFERING;
+                this.setState(PlaybackStateCompat.STATE_BUFFERING);
             }
             registerAudioNoisyReceiver();
             mMediaPlayer.seekTo(position);
             if (mCallback != null) {
-                mCallback.onPlaybackStatusChanged(mState);
+                mCallback.onPlaybackStatusChanged(this.getState());
             }
         }
     }
@@ -310,7 +343,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         LogHelper.d(TAG, "configMediaPlayerState. mAudioFocus=", mAudioFocus);
         if (mAudioFocus == AUDIO_NO_FOCUS_NO_DUCK) {
             // If we don't have audio focus and can't duck, we have to pause,
-            if (mState == PlaybackStateCompat.STATE_PLAYING) {
+            if (this.getState() == PlaybackStateCompat.STATE_PLAYING) {
                 pause();
             }
         } else {  // we have audio focus:
@@ -329,22 +362,38 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
                         mCurrentPosition);
                     if (mCurrentPosition == mMediaPlayer.getCurrentPosition()) {
                         mMediaPlayer.start();
-                        mState = PlaybackStateCompat.STATE_PLAYING;
+                        this.setState(PlaybackStateCompat.STATE_PLAYING);
                     } else {
                         mMediaPlayer.seekTo(mCurrentPosition);
-                        mState = PlaybackStateCompat.STATE_BUFFERING;
+                        this.setState(PlaybackStateCompat.STATE_BUFFERING);
                     }
                 }
                 mPlayOnFocusGain = false;
             }
         }
         if (mCallback != null) {
-            mCallback.onPlaybackStatusChanged(mState);
+            mCallback.onPlaybackStatusChanged(this.getState());
         }
     }
 
     /**
-     * Called by AudioManager on audio focus changes.
+     * Listener, called by AudioManager on audio focus changes.
+     * see https://developer.android.com/guide/topics/media-apps/volume-and-earphones.html#audio-focus
+     * "When an app acquires audio focus it must be able to release it when another app requests audio focus for itself. When this happens your app receives a call to the onAudioFocusChange() method in the AudioFocusChangeListener that you specified when the app called requestAudioFocus().
+
+     The focusChange parameter passed to onAudioFocusChange() indicates the kind of change that's happening. It corresponds to the duration hint used by the app that's aquiring focus. Your app should respond appropriately.
+
+     Transient loss of focus
+     If the focus change is transient (AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK or AUDIOFOCUS_LOSS_TRANSIENT), your app should duck or pause playing but otherwise maintain the same state.
+     During a transient loss of audio focus you should continue to monitor changes in audio focus and be prepared to resume normal playback when you regain the focus. When the blocking app abandons focus you'll receive a a callback (AUDIOFOCUS_GAIN) . At this point you can restore the volume to normal level or restart playback.
+
+     Permanent loss of focus
+     If the audio focus loss is permanent (AUDIOFOCUS_LOSS), another application is playing audio. Your app should pause play immediately. At this point your app will never receive an AUDIOFOCUS_GAIN callback. To restart playback the user must take an explicit action, like pressing the play transport control in a notification or app UI.
+     After pausing your app should wait a short interval and then stop its media session to release resources and abandon audio focus. Delaying the stop call gives the user the opportunity to restart your app's playback. This can be useful if your app goes silent because the user accidentally started a different app that requested the audio focus."
+     *
+     * "To ensure the delayed stop does not kick in if the user restarts playback, call mHandler.removeCallbacks(mDelayedStopRunnable) in response to any state changes. For example, call removeCallbacks() in your Callback's onPlay(), onSkipToNext(), etc. You should also call this method in your service's onDestroy() callback when cleaning up the resources used by your service."
+     * TODO:  I don't see above doc-prescribed removeCallbacks called, check to see if something else calls it or if it needs to be added.
+     *
      * Implementation of {@link android.media.AudioManager.OnAudioFocusChangeListener}
      */
     @Override
@@ -364,7 +413,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
 
             // If we are playing, we need to reset media player by calling configMediaPlayerState
             // with mAudioFocus properly set.
-            if (mState == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
+            if (this.getState() == PlaybackStateCompat.STATE_PLAYING && !canDuck) {
                 // If we don't have audio focus and can't duck, we save the information that
                 // we were playing, so that we can resume playback once we get the focus back.
                 mPlayOnFocusGain = true;
@@ -384,13 +433,13 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
     public void onSeekComplete(MediaPlayer mp) {
         LogHelper.d(TAG, "onSeekComplete from MediaPlayer:", mp.getCurrentPosition());
         mCurrentPosition = mp.getCurrentPosition();
-        if (mState == PlaybackStateCompat.STATE_BUFFERING) {
+        if (this.getState() == PlaybackStateCompat.STATE_BUFFERING) {
             registerAudioNoisyReceiver();
             mMediaPlayer.start();
-            mState = PlaybackStateCompat.STATE_PLAYING;
+            this.setState(PlaybackStateCompat.STATE_PLAYING);
         }
         if (mCallback != null) {
-            mCallback.onPlaybackStatusChanged(mState);
+            mCallback.onPlaybackStatusChanged(this.getState());
         }
     }
 
@@ -483,10 +532,11 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
         }
 
         // we can also release the Wifi lock, if we're holding it
-        if (mWifiLock.isHeld()) {
-            mWifiLock.release();
-        }
+        //darya if (mWifiLock.isHeld()) {
+        //darya     mWifiLock.release();
+        //darya }
     }
+
 
     private void registerAudioNoisyReceiver() {
         if (!mAudioNoisyReceiverRegistered) {
@@ -494,6 +544,7 @@ public class LocalPlayback implements Playback, AudioManager.OnAudioFocusChangeL
             mAudioNoisyReceiverRegistered = true;
         }
     }
+
 
     private void unregisterAudioNoisyReceiver() {
         if (mAudioNoisyReceiverRegistered) {

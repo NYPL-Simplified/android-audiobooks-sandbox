@@ -44,6 +44,13 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
     private MediaBrowserCompat mMediaBrowser;
     private PlaybackControlsFragment mControlsFragment;
 
+
+    /**
+     * TODO: doc
+     * constructs a MediaBrowserCompat. Pass in the name of your MediaBrowserService and the MediaBrowserCompat.ConnectionCallback that you've defined.
+     *
+     * @param savedInstanceState
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,10 +71,21 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
         // Connect a media browser just to get the media session token. There are other ways
         // this can be done, for example by sharing the session token directly.
+        // null is an optional Bundle
         mMediaBrowser = new MediaBrowserCompat(this,
             new ComponentName(this, MusicService.class), mConnectionCallback, null);
     }
 
+
+    /**
+     * TODO: doc
+     *
+     * Connects to the MediaBrowserService.
+     * Here's where the magic of MediaBrowserCompat.ConnectionCallback comes in.
+     * If the connection is successful, the onConnect() callback creates the media controller,
+     * links it to the media session, links your UI controls to the MediaController,
+     * and registers the controller to receive callbacks from the media session.
+     */
     @Override
     protected void onStart() {
         super.onStart();
@@ -81,9 +99,14 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
         hidePlaybackControls();
 
+        // connect to the MediaBrowserService
         mMediaBrowser.connect();
     }
 
+
+    /**
+     * Disconnects MediaBrowser from MediaBrowserService and unregisters the MediaController.Callback when your activity stops.
+     */
     @Override
     protected void onStop() {
         super.onStop();
@@ -94,15 +117,25 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         mMediaBrowser.disconnect();
     }
 
+
     @Override
     public MediaBrowserCompat getMediaBrowser() {
         return mMediaBrowser;
     }
 
+
     protected void onMediaControllerConnected() {
         // empty implementation, can be overridden by clients.
     }
 
+
+    /**
+     * mControlsFragment is the UI controls, which at this point are linked to the mediaController
+     * defined in connectToSession().
+     * mControlsFragment type is com.example.android.uamp.ui.PlaybackControlsFragment
+     * TODO: find where the UI controls get linked to the controller.
+     *
+     */
     protected void showPlaybackControls() {
         LogHelper.d(TAG, "showPlaybackControls");
         if (NetworkHelper.isOnline(this)) {
@@ -115,12 +148,14 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         }
     }
 
+
     protected void hidePlaybackControls() {
         LogHelper.d(TAG, "hidePlaybackControls");
         getFragmentManager().beginTransaction()
             .hide(mControlsFragment)
             .commit();
     }
+
 
     /**
      * Check if the MediaSession is active and in a "playback-able" state
@@ -145,11 +180,30 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
         }
     }
 
+
+    /**
+     * TODO: doc
+     * @param token  media session token we got from the MediaBrowserService
+     * @throws RemoteException
+     */
     private void connectToSession(MediaSessionCompat.Token token) throws RemoteException {
+        // set up a media controller
         MediaControllerCompat mediaController = new MediaControllerCompat(this, token);
+
+        // tell the media session which media controller to use and to return when MediaControllerCompat.getMediaController()
+        // is called and when media buttons are pressed.
         setSupportMediaController(mediaController);
+        /* alternative code from api example:
+        // Use the convenience method MediaControllerCompat.setMediaController() to save a link to the controller.
+        // This enables handling of media buttons. It also allows you to call MediaControllerCompat.getMediaController()
+        // to retrieve the controller when building the transport controls.
+        MediaControllerCompat.setMediaController(this, mediaController);
+        */
+
+        // tells the media controller to receive callbacks from the media session
         mediaController.registerCallback(mMediaControllerCallback);
 
+        // build UI controls (called "transport controls" in API examples)
         if (shouldShowControls()) {
             showPlaybackControls();
         } else {
@@ -164,6 +218,7 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
 
         onMediaControllerConnected();
     }
+
 
     // Callback that ensures that we are showing the controls
     private final MediaControllerCompat.Callback mMediaControllerCallback =
@@ -191,17 +246,41 @@ public abstract class BaseActivity extends ActionBarCastActivity implements Medi
             }
         };
 
+
+    /**
+     * Codes for what happens when this activity's MediaBrowser connects to the
+     * MediaBrowserService.  If connection succeeds, then calls code that will
+     * do up a media controller.
+     *
+     * retrieve the media session token from the MediaBrowserService and use the token to create a MediaControllerCompat.
+     * TODO:  check that error handling is sufficient.
+     */
     private final MediaBrowserCompat.ConnectionCallback mConnectionCallback =
         new MediaBrowserCompat.ConnectionCallback() {
             @Override
             public void onConnected() {
                 LogHelper.d(TAG, "onConnected");
                 try {
-                    connectToSession(mMediaBrowser.getSessionToken());
+                    // Get the token for the MediaSession
+                    MediaSessionCompat.Token token = mMediaBrowser.getSessionToken();
+
+                    connectToSession(token);
                 } catch (RemoteException e) {
                     LogHelper.e(TAG, e, "could not connect media controller");
                     hidePlaybackControls();
                 }
+            }
+
+            @Override
+            public void onConnectionSuspended() {
+                // The Service has crashed. Disable transport controls until it automatically reconnects
+                // TODO
+            }
+
+            @Override
+            public void onConnectionFailed() {
+                // The Service has refused our connection
+                // TODO
             }
         };
 

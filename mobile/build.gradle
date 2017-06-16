@@ -20,13 +20,24 @@ android {
     buildToolsVersion "25.0.2"
 
     defaultConfig {
-        applicationId "com.example.android.uamp"
+        applicationId "java.org.nypl.simplified.audiobookplayer"
         minSdkVersion 17
         targetSdkVersion 25
         versionCode 2
         versionName "1.1"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
+    /*  each build variant should be defined as a separate product flavor. For each flavor inside the productFlavors block,
+    you can redefine the applicationId property, or you can instead append a segment to the default application ID using applicationIdSuffix
+    productFlavors {
+        free {
+            applicationIdSuffix ".free"
+        }
+        pro {
+            applicationIdSuffix ".pro"
+        }
+    }
+    */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_7
         targetCompatibility JavaVersion.VERSION_1_7
@@ -39,6 +50,15 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+
+        /*
+        Because Gradle applies the build type configuration after the product flavor, the application ID for the "free debug"
+        build variant is now "com.example.myapp.free.debug". This is useful when you want to have both the debug and the
+        release build on the same device, because no two APKs can have the same application ID.
+        debug {
+            applicationIdSuffix ".debug"
+        }
+         */
     }
 }
 

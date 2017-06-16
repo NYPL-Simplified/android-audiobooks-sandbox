@@ -328,7 +328,7 @@ public class MediaNotificationManager extends BroadcastReceiver {
          */
 
 
-
+        // NOTE:  https://developer.android.com/guide/topics/media-apps/audio-app/building-a-mediabrowserservice.html#mediastyle-notifications
         notificationBuilder
                 //.setColor(mNotificationColor)
                 .setSmallIcon(R.drawable.ic_notification)

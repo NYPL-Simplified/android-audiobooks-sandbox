@@ -168,19 +168,7 @@ public class ManifestReader {
 			// TODO clean up
 			e.printStackTrace();
 		}
-		/*
-                        Log.d("VOLLEY", entireJokeResponse.value.joke);
-                        Log.d("VOLLEY", entireJokeResponse.type);
 
-                    } else if (object instanceof JSONArray) {
-                        JSONArray json = (JSONArray) object;
-                        Log.d("VOLLEY array", json.toString());
-                    }
-                }
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-		*/
 		return manifestModel;
 	}
 

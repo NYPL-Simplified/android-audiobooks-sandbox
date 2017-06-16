@@ -70,10 +70,10 @@ import static com.example.android.uamp.utils.MediaIDHelper.MEDIA_ID_ROOT;
  * To implement a MediaBrowserService, you need to:
  *
  * <ul>
- *
  * <li> Extend {@link android.service.media.MediaBrowserService}, implementing the media browsing
  *      related methods {@link android.service.media.MediaBrowserService#onGetRoot} and
  *      {@link android.service.media.MediaBrowserService#onLoadChildren};
+ *
  * <li> In onCreate, start a new {@link android.media.session.MediaSession} and notify its parent
  *      with the session's token {@link android.service.media.MediaBrowserService#setSessionToken};
  *
@@ -91,13 +91,10 @@ import static com.example.android.uamp.utils.MediaIDHelper.MEDIA_ID_ROOT;
  *
  * <li> Declare and export the service in AndroidManifest with an intent receiver for the action
  *      android.media.browse.MediaBrowserService
- *
  * </ul>
  *
  * To make your app compatible with Android Auto, you also need to:
- *
  * <ul>
- *
  * <li> Declare a meta-data tag in AndroidManifest.xml linking to a xml resource
  *      with a &lt;automotiveApp&gt; root element. For a media app, this must include
  *      an &lt;uses name="media"/&gt; element as a child.
@@ -108,19 +105,21 @@ import static com.example.android.uamp.utils.MediaIDHelper.MEDIA_ID_ROOT;
  *          &lt;automotiveApp&gt;
  *              &lt;uses name="media"/&gt;
  *          &lt;/automotiveApp&gt;
- *
  * </ul>
-
  * @see <a href="README.md">README.md</a> for more details.
  *
+ * TODO:  rename MusicService in manifest and all code to AudioBrowserService.
  */
 public class MusicService extends MediaBrowserServiceCompat implements
         PlaybackManager.PlaybackServiceCallback {
+
+    // TODO:  make sure setPlaybackState, setMetadata, and setQueue are all called on each track change.
 
     private static final String TAG = LogHelper.makeLogTag(MusicService.class);
 
     // Extra on MediaSession that contains the Cast device name currently connected to
     public static final String EXTRA_CONNECTED_CAST = "com.example.android.uamp.CAST_NAME";
+
     // The action of the incoming Intent indicating that it contains a command
     // to be executed (see {@link #onStartCommand})
     public static final String ACTION_CMD = "com.example.android.uamp.ACTION_CMD";
@@ -130,9 +129,11 @@ public class MusicService extends MediaBrowserServiceCompat implements
     // A value of a CMD_NAME key in the extras of the incoming Intent that
     // indicates that the music playback should be paused (see {@link #onStartCommand})
     public static final String CMD_PAUSE = "CMD_PAUSE";
+
     // A value of a CMD_NAME key that indicates that the music playback should switch
     // to local playback from cast playback.
     public static final String CMD_STOP_CASTING = "CMD_STOP_CASTING";
+
     // Delay stopSelf by using a handler.
     private static final int STOP_DELAY = 30000;
 
@@ -151,8 +152,22 @@ public class MusicService extends MediaBrowserServiceCompat implements
     private boolean mIsConnectedToCar;
     private BroadcastReceiver mCarConnectionReceiver;
 
-    /*
-     * (non-Javadoc)
+
+    /**
+     * TODO doc
+     * A newly-created media session has no capabilities. When the service receives the onCreate() lifecycle callback method,
+     * you must initialize the session by performing these steps:
+     *
+     Create and initialize the media session
+     Set the media session callback (Set flags so that the media session can receive callbacks from media controllers and media buttons.)
+     Set the media session token
+
+     Create and initialize an instance of PlaybackStateCompat and assign it to the session. The playback state changes throughout
+     the session, so we recommend caching the PlaybackStateCompat.Builder for reuse.
+     Create an instance of MediaSessionCompat.Callback and assign it to the session (more on callbacks below).
+     *
+     * In order for media buttons to work when your app is newly initialized (or stopped), its PlaybackState must contain a play action matching the intent that the media button sends. This is why ACTION_PLAY is assigned to the session state during initialization. For more information, see Responding to Media Buttons.
+     *
      * @see android.app.Service#onCreate()
      */
     @Override
@@ -166,7 +181,7 @@ public class MusicService extends MediaBrowserServiceCompat implements
         // This can help improve the response time in the method
         // {@link #onLoadChildren(String, Result<List<MediaItem>>) onLoadChildren()}.
 
-        mMusicProvider.retrieveMediaAsync(null /* Callback */);  // darya
+        // mMusicProvider.retrieveMediaAsync(null /* Callback */);  // darya
 
         mPackageValidator = new PackageValidator(this);  // darya
 
@@ -185,6 +200,7 @@ public class MusicService extends MediaBrowserServiceCompat implements
 
                     @Override
                     public void onCurrentQueueIndexUpdated(int queueIndex) {
+                        // TODO: important
                         mPlaybackManager.handlePlayRequest();
                     }
 
@@ -202,12 +218,19 @@ public class MusicService extends MediaBrowserServiceCompat implements
 
         // Start a new MediaSession
         mSession = new MediaSessionCompat(this, "MusicService");
+
         // Set the session's token so that client activities can communicate with it.
         setSessionToken(mSession.getSessionToken());
+
         // getMediaSessionCallback() has methods that handle callbacks from a media controller
+        // The callback will receive all the user's actions, like play, pause, etc..
         mSession.setCallback(mPlaybackManager.getMediaSessionCallback());
 
         // Enable callbacks from MediaButtons and TransportControls
+        // NOTE: KEYCODE_MEDIA_PLAY, KEYCODE_MEDIA_PAUSE, etc. should be listened for inside
+        // MediaSessionCompat.Callback.onMediaButtonEvent() (in sdk code).
+        // (see https://developer.android.com/guide/topics/media-apps/mediabuttons.html for explanation.)
+        // TODO: if I end up writing custom "double-click reverses 20 seconds" functionality, then will be overriding onMediaButtonEvent().
         mSession.setFlags(MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS |
                 MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
@@ -240,11 +263,12 @@ public class MusicService extends MediaBrowserServiceCompat implements
 
         mMediaRouter = MediaRouter.getInstance(getApplicationContext());
 
-        registerCarConnectionReceiver();
+        //darya registerCarConnectionReceiver();
     }
 
+
     /**
-     * (non-Javadoc)
+     * TODO: doc
      * @see android.app.Service#onStartCommand(android.content.Intent, int, int)
      */
     @Override
@@ -270,14 +294,16 @@ public class MusicService extends MediaBrowserServiceCompat implements
         return START_STICKY;
     }
 
+
     /**
-     * (non-Javadoc)
+     * TODO: doc
      * @see android.app.Service#onDestroy()
      */
     @Override
     public void onDestroy() {
         LogHelper.d(TAG, "onDestroy");
-        unregisterCarConnectionReceiver();
+        // darya unregisterCarConnectionReceiver();
+
         // Service is being killed, so make sure we release our resources
         mPlaybackManager.handleStopRequest(null);
         mMediaNotificationManager.stopNotification();
@@ -306,10 +332,13 @@ public class MusicService extends MediaBrowserServiceCompat implements
                 "; clientUid=" + clientUid + " ; rootHints=", rootHints);
         // To ensure you are not allowing any arbitrary app to browse your app's contents, you
         // need to check the origin:
+        // This is optional, and allows control over the level of access for the specified package name.
         if (!mPackageValidator.isCallerAllowed(this, clientPackageName, clientUid)) {
             // If the request comes from an untrusted package, return an empty browser root.
             // If you return null, then the media browser will not be able to connect and
             // no further calls will be made to other media browsing methods.
+            // Returning an empty BrowserRoot string lets clients connect, but their
+            // onLoadChildren requests will return nothing. This disables the ability to browse for content.
             LogHelper.i(TAG, "OnGetRoot: Browsing NOT ALLOWED for unknown caller. "
                     + "Returning empty browser root so all apps can use MediaController."
                     + clientPackageName);
@@ -322,6 +351,9 @@ public class MusicService extends MediaBrowserServiceCompat implements
             // If you want to adapt other runtime behaviors, like tweak ads or change some behavior
             // that should be different on cars, you should instead use the boolean flag
             // set by the BroadcastReceiver mCarConnectionReceiver (mIsConnectedToCar).
+
+            // Note: You should consider providing different content hierarchies depending on what type of client is making the query. In particular, Android Auto limits how users interact with audio apps. For more information, see Playing Audio for Auto. You can look at the clientPackageName at connection time to determine the client type, and return a different BrowserRoot depending on the client (or rootHints if any).
+
         }
         //noinspection StatementWithEmptyBody
         if (WearHelper.isValidWearCompanionPackage(clientPackageName)) {
@@ -330,13 +362,21 @@ public class MusicService extends MediaBrowserServiceCompat implements
             // on onLoadChildren, handle it accordingly.
         }
 
+        // Returning a non-null, non-empty root ID, lets clients use onLoadChildren() to retrieve the content hierarchy.
         return new BrowserRoot(MEDIA_ID_ROOT, null);
     }
 
 
     /**
+     * TODO: doc
+     *
+     * After the client connects, it can traverse the content hierarchy by making repeated calls to MediaBrowserCompat.subscribe() to build a local representation of the UI. The subscribe() method sends the callback onLoadChildren() to the service, which returns a list of MediaBrowser.MediaItem objects.
+
+     Each MediaItem has a unique ID string, which is an opaque token. When a client wants to open a submenu or play an item, it passes the ID. Your service is responsible for associating the ID with the appropriate menu node or content item.
+
      * provides the ability for a client to build and display a menu of the MediaBrowserService's content hierarchy
-     * Note: MediaItem objects delivered by the MediaBrowserService should not contain icon bitmaps. Use a Uri instead by calling setIconUri() when you build the MediaDescription for each item.
+     * Note: MediaItem objects delivered by the MediaBrowserService should not contain icon bitmaps.
+     * Use a Uri instead by calling setIconUri() when you build the MediaDescription for each item.
      *
      * @param parentMediaId
      * @param result
@@ -345,10 +385,15 @@ public class MusicService extends MediaBrowserServiceCompat implements
     public void onLoadChildren(@NonNull final String parentMediaId,
                                @NonNull final Result<List<MediaItem>> result) {
         LogHelper.d(TAG, "OnLoadChildren: parentMediaId=", parentMediaId);
+
         if (MEDIA_ID_EMPTY_ROOT.equals(parentMediaId)) {
             //  Browsing not allowed
+            // online doc returns a null, not empty list
             result.sendResult(new ArrayList<MediaItem>());
-        } else if (mMusicProvider.isInitialized()) {
+            return;
+        }
+
+        if (mMusicProvider.isInitialized()) {
             // if music library is ready, return immediately
             result.sendResult(mMusicProvider.getChildren(parentMediaId, getResources()));
         } else {
@@ -363,18 +408,30 @@ public class MusicService extends MediaBrowserServiceCompat implements
         }
     }
 
+
     /**
      * Callback method called from PlaybackManager whenever the music is about to play.
      *
-     * The behavior of an Android service depends on whether it is started or bound to one or more clients. After a service is created, it can be started, bound, or both. In all of these states, it is fully functional and can perform the work it's designed to do. The difference is how long the service will exist. A bound service is not destroyed until all its bound clients unbind. A started service can be explicitly stopped and destroyed (assuming it is no longer bound to any clients).
+     * The behavior of an Android service depends on whether it is started or bound to one or more clients.
+     * After a service is created, it can be started, bound, or both.  In all of these states, it is fully functional
+     * and can perform the work it's designed to do.  The difference is how long the service will exist.
+     * A bound service is not destroyed until all its bound clients unbind.
+     * A started service can be explicitly stopped and destroyed (assuming it is no longer bound to any clients).
 
-     When a MediaBrowser running in another activity connects to a MediaBrowserService, it binds the activity to the service, making the service bound (but not started). This default behavior is built into the MediaBrowserServiceCompat class.
+     * When a MediaBrowser running in another activity connects to a MediaBrowserService, it binds the activity to the service,
+     * making the service bound (but not started). This default behavior is built into the MediaBrowserServiceCompat class.
 
-     A service that is only bound (and not started) is destroyed when all of its clients unbind. If your UI activity disconnects at this point, the service is destroyed. This isn't a problem if you haven't played any music yet. However, when playback starts, the user probably expects to continue listening even after switching apps. You don't want to destroy the player when you unbind the UI to work with another app.
+     A service that is only bound (and not started) is destroyed when all of its clients unbind.
+     If your UI activity disconnects at this point, the service is destroyed. This isn't a problem if you haven't played any audio yet.
+     However, when playback starts, the user probably expects to continue listening even after switching apps.
+     You don't want to destroy the player when you unbind the UI to work with another app.
 
-     For this reason, you need to be sure that the service is started when it begins to play by calling startService(). A started service must be explicitly stopped, whether or not it's bound. This ensures that your player continues to perform even if the controlling UI activity unbinds.
+     For this reason, you need to be sure that the service is started when it begins to play by calling startService().
+     A started service must be explicitly stopped, whether or not it's bound. This ensures that your player continues
+     to perform even if the controlling UI activity unbinds.
 
-     To stop a started service, call Context.stopService() or stopSelf(). The system stops and destroys the service as soon as possible. However, if one or more clients are still bound to the service, the call to stop the service is delayed until all its clients unbind.
+     To stop a started service, call Context.stopService() or stopSelf(). The system stops and destroys the service as soon as possible.
+     However, if one or more clients are still bound to the service, the call to stop the service is delayed until all its clients unbind.
      */
     @Override
     public void onPlaybackStart() {
@@ -391,6 +448,9 @@ public class MusicService extends MediaBrowserServiceCompat implements
 
     /**
      * Callback method called from PlaybackManager whenever the music stops playing.
+     * TODO:  make sure either Context.stopService() or stopSelf() is called somewhere here in the depths,
+     * although stopForeground might be enough -- GC can stop the service if I say it's no longer foreground-needed.
+     * TODO:  also find where we're setting this service to the foreground on play start.
      */
     @Override
     public void onPlaybackStop() {
@@ -402,16 +462,28 @@ public class MusicService extends MediaBrowserServiceCompat implements
         stopForeground(true);
     }
 
+
+    /**
+     * TODO: doc
+     */
     @Override
     public void onNotificationRequired() {
         mMediaNotificationManager.startNotification();
     }
 
+
+    /**
+     * TODO: doc
+     */
     @Override
     public void onPlaybackStateUpdated(PlaybackStateCompat newState) {
         mSession.setPlaybackState(newState);
     }
 
+
+    /**
+     * TODO: doc
+     * commenting out for now: darya
     private void registerCarConnectionReceiver() {
         IntentFilter filter = new IntentFilter(CarHelper.ACTION_MEDIA_STATUS);
         mCarConnectionReceiver = new BroadcastReceiver() {
@@ -425,10 +497,17 @@ public class MusicService extends MediaBrowserServiceCompat implements
         };
         registerReceiver(mCarConnectionReceiver, filter);
     }
+    */
 
+
+    /**
+     * TODO: doc
+     * commenting out for now: darya
     private void unregisterCarConnectionReceiver() {
         unregisterReceiver(mCarConnectionReceiver);
     }
+    */
+
 
     /**
      * A simple handler that stops the service if playback is not active (playing)
@@ -453,6 +532,7 @@ public class MusicService extends MediaBrowserServiceCompat implements
             }
         }
     }
+
 
     /**
      * Session Manager Listener responsible for switching the Playback instances

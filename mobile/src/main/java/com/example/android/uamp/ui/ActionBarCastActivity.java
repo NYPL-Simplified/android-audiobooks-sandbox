@@ -73,7 +73,7 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
 
     private boolean mToolbarInitialized;
 
-    private int mItemToOpenWhenDrawerCloses = -1;
+    private int menuItemToOpenWhenDrawerCloses = -1;
 
     private CastStateListener mCastStateListener = new CastStateListener() {
         @Override
@@ -92,22 +92,39 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
         }
     };
 
+
+    /**
+     * Is called when user clicks on an item in the burger left navigation menu.
+     * Sees which menu item got clicked on, and acts accordingly.
+     * TODO:  make my new chapter items have valid menuItemToOpenWhenDrawerCloses ids
+     * TODO:  when a chapter item is clicked, it is highlighted correctly.  when the next one is clicked, the previous one doe not get un-highlighted.
+     */
     private final DrawerLayout.DrawerListener mDrawerListener = new DrawerLayout.DrawerListener() {
         @Override
         public void onDrawerClosed(View drawerView) {
+            LogHelper.d(TAG, "menuItemToOpenWhenDrawerCloses=" + menuItemToOpenWhenDrawerCloses);
+
             if (mDrawerToggle != null) mDrawerToggle.onDrawerClosed(drawerView);
-            if (mItemToOpenWhenDrawerCloses >= 0) {
+            if (menuItemToOpenWhenDrawerCloses >= 0) {
                 Bundle extras = ActivityOptions.makeCustomAnimation(
                     ActionBarCastActivity.this, R.anim.fade_in, R.anim.fade_out).toBundle();
 
                 Class activityClass = null;
-                switch (mItemToOpenWhenDrawerCloses) {
+                switch (menuItemToOpenWhenDrawerCloses) {
                     case R.id.navigation_back_to_catalog:
                         // TODO: display a message that says "you went back to library catalog"
+                        // TODO: make sure there's a catalog id in R to use
+                        // case R.id.navigation_allmusic:
                         //activityClass = MusicPlayerActivity.class;
                         break;
                     case R.id.navigation_audiobook_settings:
                         // TODO: display a settings activity
+                        // TODO: make sure there's a settings activity for me in R
+                        // TODO:  how are individual songs indicated?  not in the drawer, are they?  I think they're in the outside inteface.
+                        // the placeholder is for the playlists functionality, which isn't included in the sample,
+                        // only the all music is coded for.
+
+                        // case R.id.navigation_playlists:
                         //activityClass = PlaceholderActivity.class;
                         break;
                 }
@@ -149,7 +166,11 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         LogHelper.d(TAG, "Activity onCreate");
 
+        //int playServicesAvailable =
+        //        GoogleApiAvailability.getInstance().isGooglePlayServicesAvailable(this);
+        //if (playServicesAvailable == ConnectionResult.SUCCESS) {
         mCastContext = CastContext.getSharedInstance(this);
+        //}
     }
 
     @Override
@@ -172,8 +193,11 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
     @Override
     public void onResume() {
         super.onResume();
-        mCastContext.addCastStateListener(mCastStateListener);
-
+        
+        if (mCastContext != null) {
+            mCastContext.addCastStateListener(mCastStateListener);
+        }
+        
         // Whenever the fragment back stack changes, we may need to update the
         // action bar toggle: only top level screens show the hamburger-like icon, inner
         // screens - either Activities or fragments - show the "Up" icon instead.
@@ -191,7 +215,10 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
     @Override
     public void onPause() {
         super.onPause();
-        mCastContext.removeCastStateListener(mCastStateListener);
+
+        if (mCastContext != null) {
+            mCastContext.removeCastStateListener(mCastStateListener);
+        }
         getFragmentManager().removeOnBackStackChangedListener(mBackStackChangedListener);
     }
 
@@ -199,8 +226,11 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
     public boolean onCreateOptionsMenu(Menu menu) {
         super.onCreateOptionsMenu(menu);
         getMenuInflater().inflate(R.menu.main, menu);
-        mMediaRouteMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(),
-                menu, R.id.media_route_menu_item);
+
+        if (mCastContext != null) {
+            mMediaRouteMenuItem = CastButtonFactory.setUpMediaRouteButton(getApplicationContext(),
+                    menu, R.id.media_route_menu_item);
+        }
         return true;
     }
 
@@ -280,7 +310,7 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
                     @Override
                     public boolean onNavigationItemSelected(MenuItem menuItem) {
                         menuItem.setChecked(true);
-                        mItemToOpenWhenDrawerCloses = menuItem.getItemId();
+                        menuItemToOpenWhenDrawerCloses = menuItem.getItemId();
                         mDrawerLayout.closeDrawers();
                         return true;
                     }
@@ -308,14 +338,11 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        /**
-         *
-         * Returns the absolute path on the filesystem where a file created with
-         * {@link #openFileOutput} is stored.
+        /*
+         * Returns the absolute path on the filesystem where a file created with {@link #openFileOutput} is stored.
         public abstract File getFileStreamPath(String name);
 
-         * Returns the absolute path to the directory on the filesystem where files
-         * created with {@link #openFileOutput} are stored.
+         * Returns the absolute path to the directory on the filesystem where files created with {@link #openFileOutput} are stored.
          public abstract File getFilesDir();
          *
          FileOutputStream fOut = context.openFileOutput(filename, appContext.MODE_PRIVATE); // if internal
@@ -324,12 +351,9 @@ public abstract class ActionBarCastActivity extends AppCompatActivity {
          *
          * @param path A relative path within the assets, i.e., "docs/home.html".
          *
-         * @return String[] Array of strings, one for each asset.  These file
-         *         names are relative to 'path'.  You can open the file by
-         *         concatenating 'path' and a name in the returned string (via
-         *         File) and passing that to open().
+         * @return String[] Array of strings, one for each asset.  These file names are relative to 'path'.  You can open the file by
+         *         concatenating 'path' and a name in the returned string (via File) and passing that to open().
          public native final String[] list(String path)
-
          */
 
         ManifestReader manifestReader = new ManifestReader();

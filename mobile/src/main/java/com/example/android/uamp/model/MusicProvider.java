@@ -191,6 +191,8 @@ public class MusicProvider {
         mutableMetadata.metadata = metadata;
     }
 
+
+    // TODO: delete
     public void setFavorite(String musicId, boolean favorite) {
         if (favorite) {
             mFavoriteTracks.add(musicId);
@@ -199,16 +201,20 @@ public class MusicProvider {
         }
     }
 
+
     public boolean isInitialized() {
         return mCurrentState == State.INITIALIZED;
     }
 
+
+    // TODO: delete
     public boolean isFavorite(String musicId) {
         return mFavoriteTracks.contains(musicId);
     }
 
+
     /**
-     * Get the list of music tracks from a server and caches the track information
+     * Gets the list of music tracks from a server and caches the track information
      * for future reference, keying tracks by musicId and grouping by genre.
      */
     public void retrieveMediaAsync(final Callback callback) {
@@ -237,8 +243,11 @@ public class MusicProvider {
             }
         }.execute();
     }
-    /**/
 
+
+    /**
+     * TODO doc
+     */
     private synchronized void buildListsByGenre() {
         ConcurrentMap<String, List<MediaMetadataCompat>> newMusicListByGenre = new ConcurrentHashMap<>();
 
@@ -254,6 +263,10 @@ public class MusicProvider {
         mMusicListByGenre = newMusicListByGenre;
     }
 
+
+    /**
+     * TODO doc
+     */
     private synchronized void retrieveMedia() {
         try {
             if (mCurrentState == State.NON_INITIALIZED) {
@@ -278,6 +291,10 @@ public class MusicProvider {
     }
 
 
+    /**
+     * TODO doc
+     * TODO replace with chapters off manifest
+     */
     public List<MediaBrowserCompat.MediaItem> getChildren(String mediaId, Resources resources) {
         List<MediaBrowserCompat.MediaItem> mediaItems = new ArrayList<>();
 
@@ -285,6 +302,7 @@ public class MusicProvider {
             return mediaItems;
         }
 
+        /*
         if (MEDIA_ID_ROOT.equals(mediaId)) {
             mediaItems.add(createBrowsableMediaItemForRoot(resources));
 
@@ -302,9 +320,26 @@ public class MusicProvider {
         } else {
             LogHelper.w(TAG, "Skipping unmatched mediaId: ", mediaId);
         }
+        */
+
+        // TODO:  for each chapter, make a browsable item
+        /*
+        for (MediaMetadataCompat metadata : getMusicsByGenre(genre)) {
+            mediaItems.add(createMediaItem(metadata));
+        }
+        */
+
         return mediaItems;
     }
 
+
+    /**
+     * darya: Must make the root Genres node, which will then anchor all the browsable
+     * other media items.
+     *
+     * @param resources
+     * @return
+     */
     private MediaBrowserCompat.MediaItem createBrowsableMediaItemForRoot(Resources resources) {
         MediaDescriptionCompat description = new MediaDescriptionCompat.Builder()
                 .setMediaId(MEDIA_ID_MUSICS_BY_GENRE)
@@ -329,6 +364,8 @@ public class MusicProvider {
                 MediaBrowserCompat.MediaItem.FLAG_BROWSABLE);
     }
 
+
+    // TODO:  what's up with these queues?  I bet that's where I'd plug in my "chapters after this one" list.
     private MediaBrowserCompat.MediaItem createMediaItem(MediaMetadataCompat metadata) {
         // Since mediaMetadata fields are immutable, we need to create a copy, so we
         // can set a hierarchy-aware mediaID. We will need to know the media hierarchy
